@@ -1,0 +1,141 @@
+---
+title: "Data visualization"
+output: html_document
+date: "2022-08-17"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE)
+library(tidyverse)
+library(here)
+library(janitor)
+
+library(patchwork)
+library(ggrepel)
+library(gghighlight)
+library(paletteer)
+library(ggExtra)
+library(ggbeeswarm)
+
+library(gapminder)
+
+#library(sf)
+```
+
+```{r}
+lizards <- read_csv(here("data_tidy", "lizards.csv"))
+```
+
+```{r}
+# or ggplot(data = lizards) +
+  #geom_point(aes(x = total_length, y = weight))
+
+ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point()
+```
+
+Create a historgram of total lengths for all lizards in the dataset
+
+```{r}
+plot_1 <- ggplot(data = lizards, aes(x = total_length)) +
+  geom_histogram(color = "orange",
+                 fill = "purple",
+                 size = 0.5,
+                 linetype = "dotted")
+
+plot_1
+
+# Color aesthetic - bounding, straights, points/ Fill 
+# Don't put aes in hist () if changing something based on a constant 
+```
+
+```{r}
+plot_2 <- ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point(
+    shape = 22,
+    color = "cyan4",
+    fill = "yellow", 
+    size = 4,
+    alpha = 0.4
+  )
+
+plot_2
+
+# Alpha = transperency. 0 can't see,  1 = filled
+```
+
+```{r}
+plot_3 <- ggplot(data = lizards, aes(x = total_length, 
+                                     y = weight)) +
+  geom_point(aes(color = common_name, 
+                 size = total_length),
+                 alpha = 0.5) +
+  theme_minimal()
+              
+plot_3
+```
+
+```{r}
+plot_4 <- ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point() +
+  facet_wrap(~common_name, scales = "free")
+
+# ~ function of 
+# default is assuming you want x and y axis scales to be the same, which can be good. scales = "free" changes the scale.
+
+plot_4
+```
+
+```{r}
+lizard_counts <- lizards |>
+  group_by(common_name) |>
+  summarize(count = n())
+
+#or could do this (dplyr):
+#lizard_counts <- lizards |>
+  #count(common_name)
+
+plot_5 <- ggplot(data = lizard_counts, aes(y = fct_reorder(common_name, count), 
+                                           x = count)) +
+  geom_col(aes(fill = common_name)) +
+  theme_minimal()
+
+plot_5
+
+# convert things to a factor so that you can change the order (fct_reorder)
+```
+
+# Create a scaterrplots, faceted by species, for total length versus weight. The color and shape of points should differ based on the species (common name). Change the theme. Make each faceted panel have flexible limits (scale should be free).
+
+```{r}
+plot_6 <- lizards
+
+ggplot(data = lizards, aes(x = total_length, 
+                           y = weight)) +
+  geom_point(aes(color = common_name, 
+                 shape = common_name),
+             alpha = 0.6,
+             size = 3) +
+  facet_wrap(~common_name, scales = "free") +
+  theme_light() +
+  labs(x = "Total Length (mm)", 
+         y = "Weight (grams",
+         title = "Jornada Basain Lizard Sizes",
+         subtitle = "All lizards follow the standard length-weight relationship, with Western Whiptails being largest",
+         caption = "Data: Jornada Basin LTER, CCBY")
+  
+plot_6
+```
+
+
+
+
+
+
+
+
+
+
+
