@@ -21,7 +21,7 @@ library(ggbeeswarm)
 
 library(gapminder)
 
-#library(sf)
+library(sf)
 ```
 
 ```{r}
@@ -110,9 +110,7 @@ plot_5
 # Create a scaterrplots, faceted by species, for total length versus weight. The color and shape of points should differ based on the species (common name). Change the theme. Make each faceted panel have flexible limits (scale should be free).
 
 ```{r}
-plot_6 <- lizards
-
-ggplot(data = lizards, aes(x = total_length, 
+plot_6 <- ggplot(data = lizards, aes(x = total_length, 
                            y = weight)) +
   geom_point(aes(color = common_name, 
                  shape = common_name),
@@ -129,13 +127,124 @@ ggplot(data = lizards, aes(x = total_length,
 plot_6
 ```
 
+### fun with scales
 
+```{r}
 
+plot_7 <- ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point(aes(color = weight)) +
+  scale_color_gradient(low = "purple", high = "orange")
 
+plot_7
 
+plot_8 <- ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point(aes(color = weight)) +
+  scale_color_gradientn(colors = c("magenta", "cyan4", "darkorchid3", "dodgerblue", "green", "yellow"))
 
+plot_8
 
+plot_9 <- ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point(aes(color = weight)) +
+  scale_color_steps(low = "red", high = "black")
 
+plot_9
 
+plot_10 <- ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point(aes(color = total_length)) +
+  scale_color_steps2(low = "purple", 
+                     mid = "white",
+                     high = "orange", 
+                     midpoint = 150, 
+                     breaks = c(50, 75, 150, 180, 220, 280))
+plot_10
 
+plot_11 <- ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point(aes(color = total_length)) +
+  scale_color_stepsn(colors = c("red", "orange", "purple", "blue"),
+                     breaks = seq(from = 0, to = 300, by = 60))
 
+plot_11
+```
+
+Make a horizontal boxplot with common name on the y-axis, total length on the x-axis, with boxplot fill changing based on the common name
+
+```{r}
+# Creating a new column, overight existing column, recast common name as a factor, then put in order by median
+lizards_median <- lizards |>
+  mutate(common_name = fct_reorder(common_name, total_length, .fun = median))
+
+plot_12 <- ggplot(data = lizards, aes(y = common_name, x = total_length)) +
+  geom_boxplot(aes(fill = common_name))
+
+plot_12
+
+plot_13 <- ggplot(data = lizards_median, aes(y = common_name, x = total_length)) +
+  geom_boxplot(aes(fill = common_name), show.legend = FALSE) +
+  scale_fill_paletteer_d(palette = "khroma::sunset") +
+  theme_minimal()
+
+plot_13
+
+# To look at various packets 
+# View(palettes_d_names)
+# View(palettes_c_names)
+```
+
+```{r}
+plot_14 <- ggplot(data = lizards, aes(x = total_length, y = weight)) +
+  geom_point(aes(color = weight)) +
+  theme(panel.grid.major.x = element_line(color = "red"),
+        panel.grid.minor.y = element_line(color = "green"),
+        axis.title.x = element_text(color = "purple", size = 10),
+        axis.title.y = element_text(color = "orange"),
+        axis.text.y = element_text(color = "green"),
+        text = element_text(size = 18),
+        panel.background = element_rect(color = "purple", fill = "pink")) +
+  annotate("text", x = 300, y = 50, label = "Woooo", color = "blue") +
+  geom_vline(xintercept = 250, linetype = "dashed", color = "orange", size = 4)
+
+plot_14
+
+# could do element_blank to have the minor y not show up
+# could change both axis titles by axis.title
+```
+
+### Make a map
+
+```{r}
+jornada_veg <- read_sf(here("data_raw", "spatial_vegetation", "doc.kml"))
+                       
+ggplot() +
+  geom_sf(data = jornada_veg,
+          aes(fill = Name),
+          color = NA) +
+  theme_minimal() +
+  scale_fill_paletteer_d(palette = "ggthemes::manyeys")
+```
+
+Repulsive labels with `ggrepel`
+
+```{r}
+wws_lizards <- lizards |>
+  filter(common_name == "western whiptail",
+         site == "sand")
+
+ggplot(data = wws_lizards, aes(x = total_length, y = weight)) +
+  geom_point() +
+  geom_text_repel(aes(label = toe_num))
+
+# repels the numbers so they are not right on top of the points
+
+gapminder |>
+  filter(year == 2002, continent == "Europe") |>
+  ggplot(aes(x = gdpPercap, y = lifeExp)) +
+  geom_point() +
+  geom_text_repel(aes(label = country), size = 3)
+
+ggplot(data = wws_lizards, aes(x = total_length, y = weight)) +
+  geom_point() +
+  gghighlight(toe_num == 250, label_key = toe_num)
+
+ggplot(data = wws_lizards, aes(x = total_length, y = weight)) +
+  geom_point() +
+  gghighlight(weight > 30, label_key = toe_num)
