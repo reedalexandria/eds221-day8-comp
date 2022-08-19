@@ -28,6 +28,66 @@ library(sf)
 lizards <- read_csv(here("data_tidy", "lizards.csv"))
 ```
 
+### Make a Heatmap
+
+```{r}
+lizard_counts <- lizards |>
+  mutate(date = lubridate::mdy(date)) |>
+  count(year = lubridate::year(date), common_name) |>
+  drop_na()
+
+# drop na's for missing counts
+```
+
+```{r}
+ggplot(data = lizard_counts, aes(x = year, y = common_name)) +
+  geom_tile(aes(fill = n), show.legend = FALSE) +
+  geom_text(aes(label = n), color = "white", size = 3) +
+  scale_fill_gradientn(colors = c("navy", "red", "orange")) +
+  theme_minimal() +
+  labs(title = "Lizard Count by Common Name Compared by Year", x = "Year", y = "Common Name")
+
+```
+
+### Beeswarn plot
+
+```{r}
+whiptails <- lizards |>
+  filter(common_name == "western whiptail") |>
+  drop.na(total_length, weight)
+
+```
+
+```{r}
+whiptail_bee <- ggplot(data = whiptails, aes(x = sex, y = weight))+
+  geom_beeswarm(size = 0.5) +
+  geom_boxplot(fill = NA)
+```
+
+### Marginal plot
+- Starting at whiptails, plot total length (x-axis) vs. weight (y-axis), with point color dependent on sex
+```{r}
+whiptail_plot <- ggplot(data = whiptails, aes(x = total_length, y = weight)) +
+  geom_point(aes(color = sex)) +
+  theme(legend.position = "bottom") 
+
+ggMarginal(whiptail_plot, type = "boxplot", groupColour = TRUE)
+
+```
+
+### Patchwork
+
+```{r}
+# combine whiptail_bee and whiptail_plot
+(whiptail_bee + whiptail_plot) / whiptail_bee / whiptail_plot & theme_dark() 
+  
+# + = side by side
+# division(/) one on top of each other
+# & is applied to all plots
+```
+
+### Histogram 
+
 ```{r}
 # or ggplot(data = lizards) +
   #geom_point(aes(x = total_length, y = weight))
